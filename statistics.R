@@ -1,4 +1,4 @@
-# code used for statistics in Chevrinais et al. Methods in Ecology and Evolution
+# code used for statistics in Chevrinais and Parent, Methods in Ecology and Evolution
 
 # packages used
 library(car)
@@ -16,7 +16,6 @@ raw.data <- read.csv(file.choose(), sep=';') #File Chevrinais_2022_raw_data.csv
 # Step 1: sample preservation 
 
 # Data subsetting
-Sub1<-raw.data[76:851,]
 Sub1<-raw.data[raw.data$qPCR_mix=='GMM',]
 Sub1<-Sub1[Sub1$Date_stdcurve=='25/11/2020',]
 Sub1.1BO<-Sub1[Sub1$Trt %in% c('BO'),]
@@ -26,14 +25,9 @@ Sub1.1neg<-Sub1[Sub1$Trt %in% c('ENC2', 'ENC3', 'CONTROL'),]
 Sub1.1neg<-Sub1.1neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                 Trt = factor(Trt), conservation_t = as.numeric(as.character(conservation_t)))
 
-Sub1.1neg.graph<-Sub1.1neg%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_log10, na.rm = TRUE), sd=sd(DNA_log10, na.rm=TRUE),    se   = sd / sqrt(count))
-
 data.model <- Sub1.1BO %>% mutate(DN_copy = as.numeric(as.character(DNA_copy)),
                                   Trt = factor(Trt),
                                   conservation_t = as.numeric(as.character(conservation_t)))
-
-data.graph <-data.model%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_log10, na.rm = TRUE), sd=sd(DNA_log10, na.rm=TRUE),
-                                                                                           se   = sd / sqrt(count))
 
 # Generalized linear model
 mBO<- lmer(DNA_log10 ~ conservation_t + (1|rep_bio:ID), data= data.model)
@@ -50,19 +44,16 @@ hist(resid(mBO))
 #Data subsetting
 Sub2 <- raw.data[raw.data$Trt %in% c("FNC1", "GF", "NY", "ST", 
                                    "PES", "SNC1", "ENC1", "QNC1"), ]
-Sub2samples <- raw.data[raw.data$Trt %in% c("GF", "NY", "ST", 
-                                          "PES"),] # sans neg
+Sub2.samples <- raw.data[raw.data$Trt %in% c("GF", "NY", "ST", 
+                                          "PES"),]
 Sub2.neg<-Sub2[Sub2$Trt%in% c("SNC1"),]
 
 #Data arrangment and summary stats
 Sub2.neg<-Sub2.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                               Trt = factor(Trt))
-Sub2.neg.graph<-Sub2.neg%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),  se   = sd / sqrt(count))
 
 Sub2.samples <- Sub2samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                        Trt = factor(Trt))
-
-Sub2.samples.graph <-Sub2.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE), se   = sd / sqrt(count))
 
 # ANOVA to test differences between treatments
 res.aov<-aov(DNA_copy~Trt, data = Sub2.samples)
@@ -93,16 +84,13 @@ Sub3.neg<-Sub3[Sub3$Trt %in% c('SNC2', 'SNC3', 'CONTROL'),]
 Sub3.neglog<-Sub3.neg %>% mutate(DNA_log10 = as.numeric(as.character(DNA_log10)),
                                  Trt = factor(Trt),
                                  conservation_t = as.numeric(as.character(conservation_t)))
-Sub3.neg.graph<-Sub3.neglog%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_log10, na.rm = TRUE), sd=sd(DNA_log10, na.rm=TRUE),se   = sd / sqrt(count))
 
 Sub3.samples.model <- Sub3.samples %>% mutate(DNA_log10 = as.numeric(as.character(DNA_log10)),
                                               Trt = factor(Trt),
                                               conservation_t = factor(conservation_t)
                                               
 )
-Sub3.samples.graph <-Sub3.samples.model%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_log10, na.rm = TRUE), sd=sd(DNA_log10, na.rm=TRUE),
-                                                                                                           se   = sd / sqrt(count))
-
+            
 # Generalized linear models
 m0 <- lmer(DNA_log10 ~ conservation_t+Trt + conservation_t:Trt+ (1|rep_bio:ID), data= Sub3.samples.model) 
 m1 <- lmer(DNA_log10 ~ conservation_t + (1+conservation_t|Trt) + (1|rep_bio:ID), data= Sub3.samples.model)
@@ -136,13 +124,9 @@ Sub4.neg<-raw.data[raw.data$Trt %in% c('SNC3'),]
 # Data arrangment and summary statistics
 Sub4.neg<-Sub4.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                               Trt = factor(Trt))
-Sub4.neg.graph<-Sub4.neg%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),  se   = sd / sqrt(count))
 
 Sub4.samples <- Sub4.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         Trt = factor(Trt))
-
-
-Sub4.samples.graph <-Sub4.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE), se   = sd / sqrt(count))
 
 # ANOVA to test differences between treatments
 res.aov<-aov(DNA_copy~Trt, data = Sub4.samples)
@@ -167,14 +151,11 @@ Sub5.samples<-raw.data[raw.data$Trt %in% c('BO', "ET", "SI", 'FI','SP'),]
 Sub5.samples<-Sub5.samples[Sub5.samples$conservation_t %in% c('30'),]
 Sub5.samples<-Sub5.samples[Sub5.samples$Date_stdcurve %in% c('19/10/2020','05/10/2020','09/11/2020'),]
 
-
 # Data arrangment and summary statistics
 Sub5.samples.model <- Sub5.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                               qPCR_mix = factor(qPCR_mix),
                                               Trt = factor(Trt))
 
-Sub5.samples.graph <-Sub5.samples.model%>% group_by(Trt, qPCR_mix,code_trt,qPCR_mix_code) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),
-                                                                                                               se   = sd / sqrt(count))
 # ET treatment
 # ANOVA for comparisons of qPCR master mixes
 res.aov<-aov(DNA_log10~qPCR_mix, data = Sub5.samples[Sub5.samples$Trt %in% c('ET'),]) 
@@ -202,7 +183,6 @@ pairwise.wilcox.test(Sub5.samples[Sub5.samples$Trt %in% c("ET"),]$DNA_copy, Sub5
 # all other treatments
 Sub5.samples<-Sub5.samples[Sub5.samples$Trt %in% c('BO', "SI", 'FI','SP'),]
 
-
 # Two-way ANOVA 
 res.aov2<-aov(DNA_log10~qPCR_mix*Trt, data = Sub5.samples[Sub5.samples$Trt %in% c("SI","SP","BO","FI"),])
 summary(res.aov2)
@@ -218,15 +198,15 @@ shapiro.test(x = aov_residuals)
 
 # Non-parametric alternative to two-way ANOVA
 Sub5.samples <- Sub5.samples[Sub5.samples$Trt %in% c("SI","SP","BO","FI"),]
-Sub5.samples$DNA_log10= as.numeric(as.factor(Sub5.samples$DNA_log10)) # Subject id is nominal (unused)
-Sub5.samples$Trt = factor(Sub5.samples$Trt) # X1 is a 2-level factor
-Sub5.samples$qPCR_mix = factor(Sub5.samples$qPCR_mix) # X2 is a 2-level factor
+Sub5.samples$DNA_log10= as.numeric(as.factor(Sub5.samples$DNA_log10)) 
+Sub5.samples$Trt = factor(Sub5.samples$Trt) 
+Sub5.samples$qPCR_mix = factor(Sub5.samples$qPCR_mix) 
 m = art(DNA_log10 ~ Trt*qPCR_mix, data=Sub5.samples)
 anova(m)
 
 # Pairwise comparisons
-art.con(m, ~ Trt*qPCR_mix, adjust="holm") %>% # run ART-C for X1 ×X2
-  summary() %>% # add significance stars to the output
+art.con(m, ~ Trt*qPCR_mix, adjust="holm") %>% 
+  summary() %>% 
   mutate(sig. = symnum(p.value, corr=FALSE, na=FALSE,
                        cutpoints= c(0, .001, .01, .05, .10, 1),
                        symbols = c("***", "**", "*", ".", " ")))
