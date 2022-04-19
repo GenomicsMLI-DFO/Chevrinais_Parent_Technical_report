@@ -29,6 +29,9 @@ data.model <- Sub1.1BO %>% mutate(DN_copy = as.numeric(as.character(DNA_copy)),
                                   Trt = factor(Trt),
                                   conservation_t = as.numeric(as.character(conservation_t)))
 
+data.graph <-data.model%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),
+                                                                                           se   = sd / sqrt(count))
+
 # Generalized linear model
 mBO<- lmer(DNA_log10 ~ conservation_t + (1|rep_bio:ID), data= data.model)
 summary(mBO)
@@ -54,6 +57,8 @@ Sub2.neg<-Sub2.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
 
 Sub2.samples <- Sub2samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                        Trt = factor(Trt))
+
+Sub2.graph <-Sub2.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE), se   = sd / sqrt(count))
 
 # ANOVA to test differences between treatments
 res.aov<-aov(DNA_copy~Trt, data = Sub2.samples)
@@ -127,7 +132,7 @@ Sub4.neg<-Sub4.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
 
 Sub4.samples <- Sub4.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         Trt = factor(Trt))
-
+Sub4.graph <-Sub4.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE), se   = sd / sqrt(count))
 # ANOVA to test differences between treatments
 res.aov<-aov(DNA_copy~Trt, data = Sub4.samples)
 summary(res.aov)
@@ -182,6 +187,8 @@ pairwise.wilcox.test(Sub5.samples[Sub5.samples$Trt %in% c("ET"),]$DNA_copy, Sub5
 
 # all other treatments
 Sub5.samples<-Sub5.samples[Sub5.samples$Trt %in% c('BO', "SI", 'FI','SP'),]
+Sub5.graph <-Sub5.samples%>% group_by(Trt, qPCR_mix) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),
+                                                                                                               se   = sd / sqrt(count))
 
 # Two-way ANOVA 
 res.aov2<-aov(DNA_log10~qPCR_mix*Trt, data = Sub5.samples[Sub5.samples$Trt %in% c("SI","SP","BO","FI"),])
