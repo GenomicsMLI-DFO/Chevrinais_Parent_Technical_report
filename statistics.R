@@ -55,7 +55,7 @@ Sub2.neg<-Sub2[Sub2$Trt%in% c("SNC1"),]
 Sub2.neg<-Sub2.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                               Trt = factor(Trt))
 
-Sub2.samples <- Sub2samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+Sub2.samples <- Sub2.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                        Trt = factor(Trt))
 
 Sub2.graph <-Sub2.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE), se   = sd / sqrt(count))
