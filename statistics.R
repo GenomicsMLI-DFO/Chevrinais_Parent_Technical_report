@@ -9,6 +9,7 @@ library(lmerTest)
 library(lsmeans)
 library(rstatix)
 library(ARTool)
+library(ggplot2)
 
 # Updload raw data
 raw.data <- read.csv(file.choose(), sep=';') #File Chevrinais_2022_raw_data.csv
@@ -18,7 +19,7 @@ raw.data <- read.csv(file.choose(), sep=';') #File Chevrinais_2022_raw_data.csv
 # Data subsetting
 Sub1<-raw.data[raw.data$qPCR_mix=='GMM',]
 Sub1<-Sub1[Sub1$Date_stdcurve=='25/11/2020',]
-Sub1.1BO<-Sub1[Sub1$Trt %in% c('BO'),]
+Sub1.1BO<-Sub1[Sub1$Trt %in% c('BO','FR'),]
 Sub1.1neg<-Sub1[Sub1$Trt %in% c('ENC2', 'ENC3', 'CONTROL'),]
 
 # Data arrangment and summary statistics
@@ -32,8 +33,12 @@ data.model <- Sub1.1BO %>% mutate(DN_copy = as.numeric(as.character(DNA_copy)),
 data.graph <-data.model%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),
                                                                                            se   = sd / sqrt(count))
 
+# Data visualization with an histogram
+qplot(Sub1.1BO$DNA_copy, geom="histogram", bins=30)
+qplot(Sub1.1BO$DNA_log10, geom="histogram",bins=30)
+
 # Generalized linear model
-mBO<- lmer(DNA_log10 ~ conservation_t + (1|rep_bio:ID), data= data.model)
+mBO<- lmer(DNA_log10 ~ conservation_t+Trt + (1|rep_bio:ID), data= data.model)
 summary(mBO)
 
 # plot residuals 
