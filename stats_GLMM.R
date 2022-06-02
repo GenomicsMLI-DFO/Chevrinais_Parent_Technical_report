@@ -19,67 +19,68 @@ raw.data <- read.csv(file.choose(), sep=';') #File Chevrinais_2022_raw_data.csv
 # Data subsetting
 Sub1<-raw.data[raw.data$qPCR_mix=='GMM',]
 Sub1<-Sub1[Sub1$Date_stdcurve=='25/11/2020',]
-Sub1.1BO<-Sub1[Sub1$Trt %in% c('BO','CONTROL'),]
-Sub1.1neg<-Sub1[Sub1$Trt %in% c('ENC2', 'ENC3'),]
+Sub1.1BO<-Sub1[Sub1$Trt %in% c('BO'),] #,'CONTROL'
 
 # Data arrangment and summary statistics
-Sub1.1neg<-Sub1.1neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
-                                Trt = factor(Trt), conservation_t = as.numeric(as.character(conservation_t)))
-
-data.model <- Sub1.1BO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+Sub1.samples.cat <- Sub1.1BO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                   Trt = factor(Trt),
                                   conservation_t = factor(conservation_t))
 
-data.graph <-data.model%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),
-                                                                                           se   = sd / sqrt(count))
+Sub1.samples.cont <- Sub1.1BO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+                                       Trt = factor(Trt),
+                                       conservation_t = as.numeric(as.character(conservation_t)))
 
 # Data visualization with an histogram
 qplot(Sub1.1BO$DNA_copy, geom="histogram", bins=30)
 qplot(Sub1.1BO$DNA_log10, geom="histogram",bins=30)
 
-# Generalized linear model
-mBO<- lmer(DNA_log10 ~ conservation_t+Trt + (1|rep_bio:ID), data= data.model)
-summary(mBO)
+# Generalized linear mixed model
+mBO.cat<- lmer(DNA_log10 ~ conservation_t + (1|rep_bio:ID), data= Sub1.samples.cat)
+summary(mBO.cat)
+
+mBO.cont <- lmer(DNA_log10 ~ conservation_t + (1|rep_bio:ID), data= Sub1.samples.cont)
+summary(mBO.cont)
 
 # plot residuals 
-plot(mBO)
+plot(mBO.cat)
+plot(mBO.cont)
 
 # residual distribution  
-hist(resid(mBO))
+hist(resid(mBO.cat))
+hist(resid(mBO.cont))
+
+# Pairwise comparisons
+T.c <- pairs(lsmeans(mBO.cat, ~ conservation_t))
+T.c
 
 # Step 2: compare the properties of different filter types to restitute eDNA
 
 #Data subsetting
 Sub2 <- raw.data[raw.data$Trt %in% c("FNC1", "GF", "NY", "ST", 
-                                   "PES", "SNC1", "ENC1", "QNC1"), ]
+                                     "PES", "SNC1", "ENC1", "QNC1"), ]
 Sub2.samples <- raw.data[raw.data$Trt %in% c("GF", "NY", "ST", 
-                                          "PES"),]
-Sub2.neg<-Sub2[Sub2$Trt%in% c("SNC1"),]
+                                             "PES"),]
 
 #Data arrangment and summary stats
-Sub2.neg<-Sub2.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
-                              Trt = factor(Trt))
-
 Sub2.samples <- Sub2.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
-                                       Trt = factor(Trt))
+                                        Trt = factor(Trt))
+# Data visualization with an histogram
+qplot(Sub2.samples$DNA_copy, geom="histogram", bins=30)
+qplot(Sub2.samples$DNA_log10, geom="histogram",bins=30)
 
-Sub2.graph <-Sub2.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE), se   = sd / sqrt(count))
+# Generalized linear mixed model
+m2<- lmer(DNA_copy ~ Trt + (1|rep_bio:ID), data= Sub2.samples)
+summary(m2)
 
-# ANOVA to test differences between treatments
-res.aov<-aov(DNA_copy~Trt/ID, data = Sub2.samples)
-summary(res.aov)
+# plot residuals 
+plot(m2)
 
-# Tukey multiple pairwise-comparisons
-TukeyHSD(res.aov)
+# residual distribution  
+hist(resid(m2))
 
-# Check homogeneity of residual variances
-plot(res.aov,1)
-leveneTest(DNA_copy ~ Trt, data = Sub2.samples)
-
-# check for normality of residuals
-plot(res.aov, 2)
-aov_residuals <- residuals(object = res.aov )
-shapiro.test(x = aov_residuals)
+# Pairwise comparisons
+T.c <- pairs(lsmeans(m2, ~ Trt))
+T.c
 
 # Step 3: compare the effect of filter preservation by several methods during mid-time exposure
 
@@ -88,42 +89,48 @@ Sub3<-raw.data[raw.data$qPCR_mix=='GMM',]
 Sub3<-Sub3[Sub3$Date_stdcurve=='25/11/2020',]
 
 Sub3.samples<-Sub3[Sub3$Trt %in% c('SI','ET', 'SP','FI'),] # , 'CONTROL'
-Sub3.neg<-Sub3[Sub3$Trt %in% c('SNC2', 'SNC3'),]
 
 # Data visualization with an histogram
 qplot(Sub3.samples$DNA_copy, geom="histogram", bins=30)
 qplot(Sub3.samples$DNA_log10, geom="histogram",bins=30)
 
-
 #Data arrangement and summary statistics
-Sub3.neglog<-Sub3.neg %>% mutate(DNA_log10 = as.numeric(as.character(DNA_log10)),
-                                 Trt = factor(Trt),
-                                 conservation_t = as.numeric(as.character(conservation_t)))
-
-Sub3.samples.model <- Sub3.samples %>% mutate(DNA_log10 = as.numeric(as.character(DNA_log10)),
+Sub3.samples.cat <- Sub3.samples %>% mutate(DNA_log10 = as.numeric(as.character(DNA_log10)),
                                               Trt = factor(Trt),
                                               conservation_t = factor(conservation_t))
-            
-# Generalized linear models
-m0 <- lmer(DNA_log10 ~ conservation_t+Trt + conservation_t:Trt+ (1|rep_bio:ID), data= Sub3.samples.model) 
-m1 <- lmer(DNA_log10 ~ conservation_t + (1+conservation_t|Trt) + (1|rep_bio:ID), data= Sub3.samples.model)
+
+Sub3.samples.cont <- Sub3.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+                                         Trt = factor(Trt),
+                                         conservation_t = as.numeric(as.character(conservation_t)))
+
+# Generalized linear mixed models
+m0.cat <- lmer(DNA_log10 ~ conservation_t+Trt + conservation_t:Trt+ (1|rep_bio:ID), data= Sub3.samples.cat) 
+m1.cat <- lmer(DNA_log10 ~ conservation_t + (1+conservation_t|Trt) + (1|rep_bio:ID), data= Sub3.samples.cat)
+
+m0.cont <- lmer(DNA_log10 ~ conservation_t+Trt + conservation_t:Trt+ (1|rep_bio:ID), data= Sub3.samples.cont) 
+m1.cont <- lmer(DNA_log10 ~ conservation_t + (1+conservation_t|Trt) + (1|rep_bio:ID), data= Sub3.samples.cont)
 
 # Comparisons of GLM
-MuMIn::AICc(m0)
-MuMIn::AICc(m1)
+MuMIn::AICc(m0.cat)
+MuMIn::AICc(m1.cat)
+MuMIn::AICc(m0.cont)
+MuMIn::AICc(m1.cont)
 
 # GLM output
-summary(m0)
+summary(m0.cat)
+summary(m0.cont)
 
 # plot residuals 
-plot(mBO)
+plot(m0.cont)
+plot(m0.cat)
 
 # residual distribution  
-hist(resid(mBO))
+hist(resid(m0.cont))
+hist(resid(m0.cat))
 
 # Pairwise comparisons
-T.c <- pairs(lsmeans(m0, ~ Trt|conservation_t))
-c.T <- pairs(lsmeans(m0, ~ conservation_t|Trt))
+T.c <- pairs(lsmeans(m0.cat, ~ Trt|conservation_t))
+c.T <- pairs(lsmeans(m0.cat, ~ conservation_t|Trt))
 rbind(T.c,c.T)
 
 # Step 4: compare the effect of commercial DNA extraction kits on the detection of eDNA
@@ -131,32 +138,28 @@ rbind(T.c,c.T)
 #Data subsetting
 Sub4.samples<-raw.data[raw.data$Trt %in% c('BT', "PW", "BTZ", 'PWZ','BTT'),]
 Sub4.samples<-Sub4.samples[Sub4.samples$qPCR_mix %in% c('GMM'),]
-Sub4.neg<-raw.data[raw.data$Trt %in% c('SNC3'),]
-
 
 # Data arrangment and summary statistics
-Sub4.neg<-Sub4.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
-                              Trt = factor(Trt))
-
 Sub4.samples <- Sub4.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         Trt = factor(Trt))
-Sub4.graph <-Sub4.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE), se   = sd / sqrt(count))
 
-# ANOVA to test differences between treatments
-res.aov<-aov(DNA_copy~Trt/ID, data = Sub4.samples)
-summary(res.aov)
+# Data visualization with an histogram
+qplot(Sub4.samples$DNA_copy, geom="histogram", bins=30)
+qplot(Sub4.samples$DNA_log10, geom="histogram",bins=30)
 
-# Tukey multiple pairwise-comparisons
-TukeyHSD(res.aov)
+# Generalized linear mixed model
+m4<- lmer(DNA_copy ~ Trt + (1|rep_bio:ID), data= Sub4.samples)
+summary(m4)
 
-# Check homogeneity of residual variances
-plot(res.aov,1) 
-leveneTest(DNA_copy ~ Trt, data = Sub4.samples)
+# plot residuals 
+plot(m4)
 
-# check for normality of residuals
-plot(res.aov, 2)
-aov_residuals <- residuals(object = res.aov )
-shapiro.test(x = aov_residuals)
+# residual distribution  
+hist(resid(m4))
+
+# Pairwise comparisons
+T.c <- pairs(lsmeans(m4, ~ Trt))
+T.c
 
 # Step 5: compare the effect of the qPCR master mix on the detection of eDNA
 
@@ -170,62 +173,42 @@ Sub5.samples.model <- Sub5.samples %>% mutate(DNA_copy = as.numeric(as.character
                                               qPCR_mix = factor(qPCR_mix),
                                               Trt = factor(Trt))
 
+# Data visualization with an histogram
+qplot(Sub5.samples$DNA_copy, geom="histogram", bins=30)
+qplot(Sub5.samples$DNA_log10, geom="histogram",bins=30)
+
 # ET treatment
-# ANOVA for comparisons of qPCR master mixes
-res.aov<-aov(DNA_log10~qPCR_mix/ID, data = Sub5.samples[Sub5.samples$Trt %in% c('ET'),]) 
-summary(res.aov)
+# Generalized linear mixed model
+m5.ET<- lmer(DNA_copy ~ qPCR_mix + (1|rep_bio:ID), data= Sub5.samples[Sub5.samples$Trt %in% c('ET'),])
+summary(m5)
 
-# Tukey multiple pairwise-comparisons
-TukeyHSD(res.aov)
+# plot residuals 
+plot(m5.ET)
 
-# Check homogeneity of residual variances
-plot(res.aov,1) 
-leveneTest(DNA_log10 ~ qPCR_mix, data = Sub5.samples[Sub5.samples$Trt %in% c('ET'),])
+# residual distribution  
+hist(resid(m5.ET))
 
-# check for normality of residuals
-plot(res.aov, 2)
-aov_residuals <- residuals(object = res.aov )
-shapiro.test(x = aov_residuals)
-
-# Non parametric alternative to ANOVA
-kruskal.test(DNA_copy ~ qPCR_mix, data = Sub5.samples[Sub5.samples$Trt %in% c('ET'),])
- 
 # Pairwise comparisons
-pairwise.wilcox.test(Sub5.samples[Sub5.samples$Trt %in% c("ET"),]$DNA_copy, Sub5.samples[Sub5.samples$Trt %in% c("ET"),]$qPCR_mix,
-                     p.adjust.method = "BH")
+T.c <- pairs(lsmeans(m5.ET, ~ qPCR_mix))
+T.c
 
 # all other treatments
 Sub5.samples<-Sub5.samples[Sub5.samples$Trt %in% c('BO', "SI", 'FI','SP'),]
-Sub5.graph <-Sub5.samples%>% group_by(Trt, qPCR_mix) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),
-                                                                                                               se   = sd / sqrt(count))
 
-# Two-way ANOVA 
-res.aov2<-aov(DNA_log10~qPCR_mix*Trt, data = Sub5.samples[Sub5.samples$Trt %in% c("SI","SP","BO","FI"),])
-summary(res.aov2)
+# Generalized linear mixed model
+m5<- lmer(DNA_copy ~ qPCR_mix+Trt + Trt:qPCR_mix + (1|rep_bio:ID), data= Sub5.samples)
+summary(m5)
 
-# Check homogeneity of residual variances
-plot(res.aov2,1)
-leveneTest(DNA_log10 ~ qPCR_mix*Trt, data = Sub5.samples[Sub5.samples$Trt %in% c("SI","SP","BO","FI"),]) 
+# plot residuals 
+plot(m5)
 
-# check for normality of residuals
-plot(res.aov2, 2)
-aov_residuals <- residuals(object = res.aov2 )
-shapiro.test(x = aov_residuals)
-
-# Non-parametric alternative to two-way ANOVA
-Sub5.samples <- Sub5.samples[Sub5.samples$Trt %in% c("SI","SP","BO","FI"),]
-Sub5.samples$DNA_log10= as.numeric(as.factor(Sub5.samples$DNA_log10)) 
-Sub5.samples$Trt = factor(Sub5.samples$Trt) 
-Sub5.samples$qPCR_mix = factor(Sub5.samples$qPCR_mix) 
-m = art(DNA_log10 ~ Trt*qPCR_mix, data=Sub5.samples)
-anova(m)
+# residual distribution  
+hist(resid(m5))
 
 # Pairwise comparisons
-art.con(m, ~ Trt*qPCR_mix, adjust="holm") %>% 
-  summary() %>% 
-  mutate(sig. = symnum(p.value, corr=FALSE, na=FALSE,
-                       cutpoints= c(0, .001, .01, .05, .10, 1),
-                       symbols = c("***", "**", "*", ".", " ")))
+T.c <- pairs(lsmeans(m5, ~ Trt|qPCR_mix))
+c.T <- pairs(lsmeans(m5, ~ qPCR_mix|Trt))
+rbind(T.c,c.T)
 
 # Extraction kits comparisons in environmental samples
 
