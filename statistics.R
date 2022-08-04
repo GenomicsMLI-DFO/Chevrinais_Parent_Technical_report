@@ -19,20 +19,20 @@ raw.data <- read.csv(file.choose(), sep=';') #File Chevrinais_2022_raw_data.csv
 # Data subsetting
 Sub1<-raw.data[raw.data$qPCR_mix=='GMM',]
 Sub1<-Sub1[Sub1$Date_stdcurve=='25/11/2020',]
-Sub1.1BO<-Sub1[Sub1$Trt %in% c('BO'),] #,'CONTROL'
+Sub1.1FO<-Sub1[Sub1$Trt %in% c('FO', 'FE'),] 
 
 # Data arrangment and summary statistics
-Sub1.samples.cat <- Sub1.1BO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+Sub1.samples.cat <- Sub1.1FO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                   Trt = factor(Trt),
                                   conservation_t = factor(conservation_t))
 
-Sub1.samples.cont <- Sub1.1BO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+Sub1.samples.cont <- Sub1.1FO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                        Trt = factor(Trt),
                                        conservation_t = as.numeric(as.character(conservation_t)))
 
 # Data visualization with an histogram
-qplot(Sub1.1BO$DNA_copy, geom="histogram", bins=30)
-qplot(Sub1.1BO$DNA_log10, geom="histogram",bins=30)
+qplot(Sub1.1FO$DNA_copy, geom="histogram", bins=30)
+qplot(Sub1.1FO$DNA_log10, geom="histogram",bins=30)
 
 # Generalized linear mixed model
 mBO.cat<- lmer(DNA_log10 ~ conservation_t + (1|rep_bio:ID), data= Sub1.samples.cat)
@@ -88,7 +88,7 @@ T.c
 Sub3<-raw.data[raw.data$qPCR_mix=='GMM',]
 Sub3<-Sub3[Sub3$Date_stdcurve=='25/11/2020',]
 
-Sub3.samples<-Sub3[Sub3$Trt %in% c('SI','ET', 'SP','FI'),] # , 'CONTROL'
+Sub3.samples<-Sub3[Sub3$Trt %in% c('SI','ET', 'SP','FI', 'FE'),] 
 
 # Data visualization with an histogram
 qplot(Sub3.samples$DNA_copy, geom="histogram", bins=30)
@@ -161,10 +161,37 @@ hist(resid(m4))
 T.c <- pairs(lsmeans(m4, ~ Trt))
 T.c
 
+# Correction of PW and PWZ values for 100 uL elution volume
+# Data subsetting
+Sub4.samples<-raw.data[raw.data$Trt %in% c('BT', "PW", "BTZ", 'PWZ','BTT', 'PW_correction', 'PWZ_correction'),]
+Sub4.samples<-Sub4.samples[Sub4.samples$qPCR_mix %in% c('GMM'),]
+
+# Data arrangment and summary statistics
+Sub4.samples <- Sub4.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+                                        Trt = factor(Trt))
+
+# Data visualization with an histogram
+qplot(Sub4.samples$DNA_copy, geom="histogram", bins=30)
+qplot(Sub4.samples$DNA_log10, geom="histogram",bins=30)
+
+# Generalized linear mixed model
+m4<- lmer(DNA_copy ~ Trt + (1|rep_bio:ID), data= Sub4.samples)
+summary(m4)
+
+# plot residuals 
+plot(m4)
+
+# residual distribution  
+hist(resid(m4))
+
+# Pairwise comparisons
+T.c <- pairs(lsmeans(m4, ~ Trt))
+T.c
+
 # Step 5: compare the effect of the qPCR master mix on the detection of eDNA
 
 # Data subsetting
-Sub5.samples<-raw.data[raw.data$Trt %in% c('BO', "ET", "SI", 'FI','SP'),]
+Sub5.samples<-raw.data[raw.data$Trt %in% c('FO', "ET", "SI", 'FI','SP'),]
 Sub5.samples<-Sub5.samples[Sub5.samples$conservation_t %in% c('30'),]
 Sub5.samples<-Sub5.samples[Sub5.samples$Date_stdcurve %in% c('19/10/2020','05/10/2020','09/11/2020'),]
 
@@ -193,7 +220,7 @@ T.c <- pairs(lsmeans(m5.ET, ~ qPCR_mix))
 T.c
 
 # all other treatments
-Sub5.samples<-Sub5.samples[Sub5.samples$Trt %in% c('BO', "SI", 'FI','SP'),]
+Sub5.samples<-Sub5.samples[Sub5.samples$Trt %in% c('FO', "SI", 'FI','SP'),]
 
 # Generalized linear mixed model
 m5<- lmer(DNA_copy ~ qPCR_mix+Trt + Trt:qPCR_mix + (1|rep_bio:ID), data= Sub5.samples)
