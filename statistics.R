@@ -163,7 +163,7 @@ T.c
 
 # Correction of PW and PWZ values for 100 uL elution volume
 # Data subsetting
-Sub4.samples<-raw.data[raw.data$Trt %in% c('BT', "PW", "BTZ", 'PWZ','BTT', 'PW_correction', 'PWZ_correction'),]
+Sub4.samples<-raw.data[raw.data$Trt %in% c('BT', 'BTT', 'BTZ',"PW", 'PWZ', 'PW_c', 'PWZ_c'),]
 Sub4.samples<-Sub4.samples[Sub4.samples$qPCR_mix %in% c('GMM'),]
 
 # Data arrangment and summary statistics
@@ -198,7 +198,10 @@ Sub5.samples<-Sub5.samples[Sub5.samples$Date_stdcurve %in% c('19/10/2020','05/10
 # Data arrangment and summary statistics
 Sub5.samples.model <- Sub5.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                               qPCR_mix = factor(qPCR_mix),
-                                              Trt = factor(Trt))
+                                             Trt = factor(Trt))
+
+Sub5.samples.graph <-Sub5.samples.model%>% group_by(Trt, qPCR_mix) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),
+                                                                                                               se   = sd / sqrt(count))
 
 # Data visualization with an histogram
 qplot(Sub5.samples$DNA_copy, geom="histogram", bins=30)
@@ -344,4 +347,3 @@ shapiro.test(x = aov_residuals)
 # check for normality of residuals
 plot(res.aov2,1) 
 leveneTest(delta_cq ~ qPCR_mix*Site, data = Sub7)
-
