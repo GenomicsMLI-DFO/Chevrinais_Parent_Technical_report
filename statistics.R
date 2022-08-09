@@ -18,7 +18,7 @@ raw.data <- read.csv(file.choose(), sep=';') #File Chevrinais_2022_raw_data.csv
 
 # Data subsetting
 Sub1<-raw.data[raw.data$qPCR_mix=='GMM',]
-Sub1<-Sub1[Sub1$Date_stdcurve=='25/11/2020',]
+Sub1<-Sub1[Sub1$Date_stdcurve%in% c('29/07/2020', '25/11/2020', '19/10/2020'),]
 Sub1.1FO<-Sub1[Sub1$Trt %in% c('FO', 'FE'),] 
 
 # Data arrangment and summary statistics
@@ -29,6 +29,13 @@ Sub1.samples.cat <- Sub1.1FO %>% mutate(DNA_copy = as.numeric(as.character(DNA_c
 Sub1.samples.cont <- Sub1.1FO %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                        Trt = factor(Trt),
                                        conservation_t = as.numeric(as.character(conservation_t)))
+
+Sub1.neg <-Sub1[Sub1$Trt %in% c('SNC0', 'ENC0', 'SNC2','FNC0','FNC2','ENC0','ENC2','QNC2'),]
+
+Sub1.1neg<-Sub1.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+                               Trt = factor(Trt), conservation_t = as.numeric(as.character(conservation_t)))
+
+Sub1.neg.stats<-Sub1.neg%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
 # Data visualization with an histogram
 qplot(Sub1.1FO$DNA_copy, geom="histogram", bins=30)
@@ -64,6 +71,9 @@ Sub2.samples <- raw.data[raw.data$Trt %in% c("GF", "NY", "ST",
 #Data arrangment and summary stats
 Sub2.samples <- Sub2.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         Trt = factor(Trt))
+
+Sub2.stats<-Sub2%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
+
 # Data visualization with an histogram
 qplot(Sub2.samples$DNA_copy, geom="histogram", bins=30)
 qplot(Sub2.samples$DNA_log10, geom="histogram",bins=30)
@@ -103,6 +113,9 @@ Sub3.samples.cont <- Sub3.samples %>% mutate(DNA_copy = as.numeric(as.character(
                                          Trt = factor(Trt),
                                          conservation_t = as.numeric(as.character(conservation_t)))
 
+Sub3.stats<-Sub3.samples%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
+
+
 # Generalized linear mixed models
 m0.cat <- lmer(DNA_log10 ~ conservation_t+Trt + conservation_t:Trt+ (1|rep_bio:ID), data= Sub3.samples.cat) 
 m1.cat <- lmer(DNA_log10 ~ conservation_t + (1+conservation_t|Trt) + (1|rep_bio:ID), data= Sub3.samples.cat)
@@ -137,11 +150,17 @@ rbind(T.c,c.T)
 
 #Data subsetting
 Sub4.samples<-raw.data[raw.data$Trt %in% c('BT', "PW", "BTZ", 'PWZ','BTT'),]
+Sub4.neg<-raw.data[raw.data$Trt %in% c('SNC3', "FNC3", "ENC3", 'QNC3'),]
 Sub4.samples<-Sub4.samples[Sub4.samples$qPCR_mix %in% c('GMM'),]
 
 # Data arrangment and summary statistics
 Sub4.samples <- Sub4.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         Trt = factor(Trt))
+
+Sub4.neg <- Sub4.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
+                                        Trt = factor(Trt))
+
+Sub4.neg.stats<-Sub4.neg%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
 # Data visualization with an histogram
 qplot(Sub4.samples$DNA_copy, geom="histogram", bins=30)
