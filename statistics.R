@@ -14,7 +14,7 @@ library(ggplot2)
 library(effects)
 
 # Updload raw data ####
-raw.data <- read.csv2(file.path(here::here(), "Raw_data.csv"))
+raw.data <- read.csv2(file.path(here::here(), "Raw_data_010425.csv"))
 
 # Experiment 1: effect of the sample preservation on the DNA copies ####
 # Data subsetting
@@ -32,13 +32,15 @@ Sub1.samples.cont <- Sub1.1FO %>% mutate(DNA_copy = as.numeric(as.character(DNA_
                                   conservation_t = as.numeric(as.character(conservation_t)),
                                   DNA_log10 = as.numeric(as.character(DNA_log10)))
 
+Sub1.stats<-Sub1.samples.cat%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
+
 #Detections in negative controls
 Sub1.neg <-raw.data[raw.data$Trt %in% c('SNC0', 'ENC0', 'SNC2','FNC0','FNC2','ENC0','ENC2','QNC2'),]
 
 Sub1.1neg<-Sub1.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                Trt = factor(Trt), conservation_t = as.numeric(as.character(conservation_t)))
 
-Sub1.neg.stats<-Sub1.neg%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count)) #results in Table S2
+Sub1.neg.stats<-Sub1.neg%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm=TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count)) #results in Table S2
 
 # Data visualization with an histogram
 g1 <- ggplot(Sub1.samples.cat, aes(x=DNA_copy)) + geom_histogram()
@@ -83,7 +85,7 @@ Sub2.samples <- Sub2.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_c
                                         DNA_log10 = as.numeric(as.character(DNA_log10)),
                                         Trt = factor(Trt))
 
-Sub2.stats<-Sub2.samples%>% group_by(Trt, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
+Sub2.stats<-Sub2.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
 # Data visualization with an histogram
 g3 <- ggplot(Sub2.samples, aes(x=DNA_copy)) + geom_histogram()
@@ -132,7 +134,7 @@ Sub3.samples.cont <- Sub3.samples %>% mutate(DNA_copy = as.numeric(as.character(
                                          Trt = factor(Trt),
                                          conservation_t = as.numeric(as.character(conservation_t)))
 
-Sub3.stats<-Sub3.samples%>% group_by(Trt, conservation_t, rep_bio, ID) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
+Sub3.stats<-Sub3.samples%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
 Sub3.neg <-raw.data[raw.data$Trt %in% c('SNC0', 'ENC0', 'SNC2','FNC0','FNC2','ENC0','ENC2','QNC2'),]
 
@@ -168,6 +170,8 @@ Sub4.neg<-raw.data[raw.data$Trt %in% c('SNC3', "FNC3", "ENC3", 'QNC3'),]
 Sub4.samples <- Sub4.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         DNA_log10 = as.numeric(as.character(DNA_log10)),
                                         Trt = factor(Trt))
+
+Sub4.samples.stats<-Sub4.samples%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
 Sub4.neg <- Sub4.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         Trt = factor(Trt))
