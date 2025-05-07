@@ -34,6 +34,8 @@ Sub1.samples.cont <- Sub1.1FO %>% mutate(DNA_copy = as.numeric(as.character(DNA_
 
 Sub1.stats<-Sub1.samples.cat%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
+write.csv(Sub1.stats, file = file.path(here::here(), paste0("Exp1_stats.csv")))
+
 #Detections in negative controls
 Sub1.neg <-raw.data[raw.data$Trt %in% c('SNC0', 'ENC0', 'SNC2','FNC0','FNC2','ENC0','ENC2','QNC2'),]
 
@@ -87,6 +89,8 @@ Sub2.samples <- Sub2.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_c
 
 Sub2.stats<-Sub2.samples%>% group_by(Trt) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
+write.csv(Sub2.stats, file = file.path(here::here(), paste0("Exp2_stats.csv")))
+
 # Data visualization with an histogram
 g3 <- ggplot(Sub2.samples, aes(x=DNA_copy)) + geom_histogram()
 g3
@@ -136,6 +140,8 @@ Sub3.samples.cont <- Sub3.samples %>% mutate(DNA_copy = as.numeric(as.character(
 
 Sub3.stats<-Sub3.samples%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
 
+write.csv(Sub3.stats, file = file.path(here::here(), paste0("Exp3_stats.csv")))
+
 Sub3.neg <-raw.data[raw.data$Trt %in% c('SNC0', 'ENC0', 'SNC2','FNC0','FNC2','ENC0','ENC2','QNC2'),]
 
 # Generalized linear mixed models
@@ -172,6 +178,8 @@ Sub4.samples <- Sub4.samples %>% mutate(DNA_copy = as.numeric(as.character(DNA_c
                                         Trt = factor(Trt))
 
 Sub4.samples.stats<-Sub4.samples%>% group_by(Trt, conservation_t) %>% dplyr::summarise(count = n(), mean = mean(DNA_copy, na.rm = TRUE), sd=sd(DNA_copy, na.rm=TRUE),    se   = sd / sqrt(count))
+
+write.csv(Sub4.samples.stats, file = file.path(here::here(), paste0("Exp4_stats.csv")))
 
 Sub4.neg <- Sub4.neg %>% mutate(DNA_copy = as.numeric(as.character(DNA_copy)),
                                         Trt = factor(Trt))
