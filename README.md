@@ -4,7 +4,7 @@ __Main author:__  Marion Chevrinais
 __Affiliation:__  Fisheries and Oceans Canada (DFO)   
 __Group:__        Laboratory of genomics   
 __Location:__     Maurice Lamontagne Institute, Mont-Joli, Québec, Canada  
-__Affiliated publication:__ Chevrinais et al. 2024. Improving estuarine water environmental DNA detections using tank experiment. Conservation Genetics Resources.       
+__Affiliated publication:__ Chevrinais and Parent. Improving estuarine water environmental DNA detections using tank experiment. Canadian Technical Report of Fisheries and Aquatic Sciences.       
 __Contact:__      e-mail: marion.chevrinais@dfo-mpo.gc.ca 
 
 - [Description](#description)
